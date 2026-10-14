@@ -149,14 +149,79 @@ def parse_crew_result_dynamic(raw_result: Any) -> Any:
         text,
         flags=re.IGNORECASE,
     )
-    text = re.sub(r"\s*```$",
-                  "",
-                  text)
+    text = re.sub(r"\s*```$", "", text)
 
     try:
         return json.loads(text)
     except json.JSONDecodeError:
+        pass
+
+    # Fallback: parse a Markdown table.
+    lines = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip().startswith("|")
+    ]
+
+    if len(lines) < 2:
         return None
+
+    headers = [cell.strip() for cell in lines[0].strip("|").split("|")]
+
+    # Skip the Markdown separator row.
+    data_lines = [
+        line for line in lines[1:]
+        if not re.fullmatch(
+            r"\|[\s:\-|]+\|",
+            line.replace(" ", ""),
+        )
+    ]
+
+    # Remove separator rows more robustly.
+    data_lines = [
+        line for line in data_lines
+        if not all(
+            re.fullmatch(r":?-{3,}:?", cell.strip())
+            for cell in line.strip("|").split("|")
+        )
+    ]
+
+    results = []
+
+    for line in data_lines:
+        values = [cell.strip() for cell in line.strip("|").split("|")]
+
+        if len(values) != len(headers):
+            continue
+
+        row = dict(zip(headers, values))
+
+        # Normalize column names to the API's JSON schema.
+        employee = {
+            "employee_id": row.get("Employee ID"),
+            "name": row.get("Name"),
+            "role": row.get("Role"),
+            "skills": [
+                skill.strip()
+                for skill in row.get("Skills", "").split(",")
+                if skill.strip()
+            ],
+            "workload_hours": None,
+        }
+
+        try:
+            employee["workload_hours"] = int(
+                row.get("Workload Hours", "")
+            )
+        except (ValueError, TypeError):
+            return None
+
+        if not employee["employee_id"] or not employee["name"]:
+            return None
+
+        results.append(employee)
+
+    return results if results else None
     
 @router.post(
     "/employees/search-dynamic",
