@@ -1,0 +1,27 @@
+[project]
+name = "flow_practice"
+version = "0.1.0"
+description = "flow-practice using crewAI"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "crewai[tools]>=1.15.22,<2.0.0",
+    "email-validator>=2.3.0",
+    "fastapi>=0.142.2",
+    "pymongo>=4.18.2",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+kickoff = "flow_practice.main:kickoff"
+run_crew = "flow_practice.main:kickoff"
+plot = "flow_practice.main:plot"
+run_with_trigger = "flow_practice.main:run_with_trigger"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.crewai]
+type = "flow"
+project_id = "ac1425cd-7fae-4daf-a252-cb88b22a64b0"
