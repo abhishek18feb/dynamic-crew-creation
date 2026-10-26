@@ -8,8 +8,14 @@ from flow_practice.models.llm_config import LLMConfig
 
 
 class LLMConfigRepository:
-    def __init__(self):
-        self.collection: Collection = database["llm_configs"]
+    def __init__(self, database_override=None):
+        db = (
+            database
+            if database_override is None
+            else database_override
+        )
+
+        self.collection: Collection = db["llm_configs"]
 
         self.collection.create_index(
             [("llm_config_id", ASCENDING)],

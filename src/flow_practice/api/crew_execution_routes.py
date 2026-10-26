@@ -1,7 +1,7 @@
 
 import logging
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel, Field
 
 from flow_practice.crews.crew.crew_builder import CrewBuilder
@@ -14,7 +14,9 @@ router = APIRouter(
     tags=["Crew Execution"],
 )
 
-builder = CrewBuilder()
+# builder = CrewBuilder()
+def get_crew_builder() -> CrewBuilder:
+    return CrewBuilder()
 
 
 class CrewRunInput(BaseModel):
@@ -22,7 +24,7 @@ class CrewRunInput(BaseModel):
 
 
 @router.post("/{crew_id}/run")
-def run_crew(crew_id: str, request: CrewRunInput):
+def run_crew(crew_id: str, request: CrewRunInput, builder: CrewBuilder = Depends(get_crew_builder)):
     try:
         crew = builder.build_crew(crew_id)
         result = crew.kickoff(inputs=request.inputs)

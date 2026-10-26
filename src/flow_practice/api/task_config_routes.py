@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from flow_practice.crews.database.task_config_repository import (
     TaskConfigRepository,
@@ -12,11 +12,13 @@ router = APIRouter(
     tags=["Task Configurations"],
 )
 
-repository = TaskConfigRepository()
+# repository = TaskConfigRepository()
+def get_task_repository() -> TaskConfigRepository:
+    return TaskConfigRepository()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_task_config(config: TaskConfig):
+def create_task_config(config: TaskConfig, repository: TaskConfigRepository = Depends(get_task_repository)):
     try:
         return repository.create(config)
     except ValueError as exc:
@@ -27,7 +29,7 @@ def create_task_config(config: TaskConfig):
 
 
 @router.get("/{task_id}")
-def get_task_config(task_id: str):
+def get_task_config(task_id: str, repository: TaskConfigRepository = Depends(get_task_repository)):
     config = repository.get_by_id(task_id)
 
     if config is None:
@@ -40,5 +42,5 @@ def get_task_config(task_id: str):
 
 
 @router.get("")
-def list_task_configs():
+def list_task_configs(repository: TaskConfigRepository = Depends(get_task_repository)):
     return repository.list_active()

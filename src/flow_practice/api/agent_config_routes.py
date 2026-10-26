@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 from flow_practice.models.agent_config import AgentConfig
 from flow_practice.crews.database.agent_config_repository import (
@@ -15,11 +15,16 @@ class AgentLLMSelection(BaseModel):
 
 router = APIRouter(prefix="/agent-configs", tags=["Agent Configurations"])
 
-repository = AgentConfigRepository(database=database)
+def get_agent_repository() -> AgentConfigRepository:
+    return AgentConfigRepository(database=database)
+
+
+def get_llm_repository() -> LLMConfigRepository:
+    return LLMConfigRepository()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_agent_config(config: AgentConfig):
+def create_agent_config(config: AgentConfig, repository: AgentConfigRepository = Depends(get_agent_repository),):
     try:
         return repository.create(config)
     except ValueError as exc:
@@ -30,7 +35,7 @@ def create_agent_config(config: AgentConfig):
 
 
 @router.get("/{agent_id}")
-def get_agent_config(agent_id: str):
+def get_agent_config(agent_id: str, repository: AgentConfigRepository = Depends(get_agent_repository),):
     config = repository.get_by_id(agent_id)
 
     if config is None:
@@ -43,15 +48,17 @@ def get_agent_config(agent_id: str):
 
 
 @router.get("")
-def list_active_agent_configs():
+def list_active_agent_configs(repository: AgentConfigRepository = Depends(get_agent_repository),):
     return repository.list_active()
 
 @router.patch("/{agent_id}/llm-config")
 def update_agent_llm(
     agent_id: str,
     selection: AgentLLMSelection,
+    repository: AgentConfigRepository = Depends(get_agent_repository),
+    model_repository: LLMConfigRepository = Depends(get_llm_repository),
 ):
-    model_repository = LLMConfigRepository()
+    # model_repository = model_repository()
     model = model_repository.get_by_id(selection.llm_config_id)
 
     if (

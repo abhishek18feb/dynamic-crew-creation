@@ -25,3 +25,9 @@ build-backend = "hatchling.build"
 [tool.crewai]
 type = "flow"
 project_id = "ac1425cd-7fae-4daf-a252-cb88b22a64b0"
+
+[dependency-groups]
+dev = [
+    "mongomock>=4.3.0",
+    "pytest>=9.1.1",
+]

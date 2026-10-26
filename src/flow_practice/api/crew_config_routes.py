@@ -1,5 +1,5 @@
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from flow_practice.crews.database.crew_config_repository import (
     CrewConfigRepository,
@@ -12,11 +12,13 @@ router = APIRouter(
     tags=["Crew Configurations"],
 )
 
-repository = CrewConfigRepository()
+# repository = CrewConfigRepository()
+def get_crew_repository() -> CrewConfigRepository:
+    return CrewConfigRepository()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_crew_config(config: CrewConfig):
+def create_crew_config(config: CrewConfig, repository: CrewConfigRepository = Depends(get_crew_repository)):
     try:
         return repository.create(config)
     except ValueError as exc:
@@ -27,7 +29,7 @@ def create_crew_config(config: CrewConfig):
 
 
 @router.get("/{crew_id}")
-def get_crew_config(crew_id: str):
+def get_crew_config(crew_id: str, repository: CrewConfigRepository = Depends(get_crew_repository)):
     config = repository.get_by_id(crew_id)
 
     if config is None:
@@ -40,5 +42,5 @@ def get_crew_config(crew_id: str):
 
 
 @router.get("")
-def list_crew_configs():
+def list_crew_configs(repository: CrewConfigRepository = Depends(get_crew_repository)):
     return repository.list_active()
