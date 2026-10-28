@@ -30,4 +30,5 @@ project_id = "ac1425cd-7fae-4daf-a252-cb88b22a64b0"
 dev = [
     "mongomock>=4.3.0",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
 ]

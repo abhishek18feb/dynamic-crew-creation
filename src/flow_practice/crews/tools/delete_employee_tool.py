@@ -1,3 +1,4 @@
+
 from crewai.tools import BaseTool
 
 from flow_practice.models.employee_delete import EmployeeDeleteInput
@@ -30,7 +31,13 @@ class DeleteEmployeeTool(BaseTool):
         employee_id: str,
         confirm_delete: bool = False,
     ) -> dict:
-        if not confirm_delete:
+        # Validate input using the Pydantic model.
+        delete_input = EmployeeDeleteInput(
+            employee_id=employee_id,
+            confirm_delete=confirm_delete,
+        )
+
+        if not delete_input.confirm_delete:
             return {
                 "success": False,
                 "error": (
@@ -41,13 +48,15 @@ class DeleteEmployeeTool(BaseTool):
 
         try:
             deleted_employee = delete_employee(
-                employee_id=employee_id
+                employee_id=delete_input.employee_id
             )
 
             if deleted_employee is None:
                 return {
                     "success": False,
-                    "error": f"Employee {employee_id} was not found.",
+                    "error": (
+                        f"Employee {employee_id} was not found."
+                    ),
                 }
 
             return {
@@ -57,8 +66,10 @@ class DeleteEmployeeTool(BaseTool):
             }
 
         except Exception:
-            # Log the underlying exception in your application.
+            # Add application logging for the underlying exception.
             return {
                 "success": False,
-                "error": "An unexpected error occurred during deletion.",
+                "error": (
+                    "An unexpected error occurred during deletion."
+                ),
             }
